@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <link rel="stylesheet" href="MemoryManagerStyling.css">
+    <link rel="stylesheet" href="MMSelectAlgorithm.css">
+    <link rel="stylesheet" href="MMMemoryImage.css">
+    <link rel="stylesheet" href="MMProcessManager.css">
+    <link rel="stylesheet" href="MMMemoryCompaction.css">
+    <title>Memory Manager Simulator</title>
+    <script src="MemoryManager.js"></script>
+</head>
+
+<body>
+    <div class="mainGrid">
+        <div class="header">
+            <h1>Memory Manager Simulator</h1>
+        </div>
+
+        <div class="algorithmSelection">
+            <p id="selectAlgTitle">Select Algorithm:</p>
+
+            <select name="algorithms" id="algorithmDropDown">
+                <option value = "First Fit">First Fit</option>
+                <option value = "Best Fit">Best Fit</option>
+                <option value = "Worst Fit">Worst Fit</option>
+            </select> <br>
+
+            <p id="totalMem">Total Memory: </p>
+            <input type="text" id="totalMemory"> K <br>
+
+            <p id="OSMem">OS Memory: </p>
+            <input type="text" id="OSMemory"> K
+        </div>
+
+        <div class="memoryImage">
+
+        </div>
+
+        <div class="processManager">
+            <p id="processIDTitle">Process ID: </p>
+            <select name="processesID">
+                <option value = "1">P1</option>
+                <option value = "2">P2</option>
+                <option value = "3">P3</option>
+                <option value = "4">P4</option>
+                <option value = "5">P5</option>
+                <option value = "6">P6</option>
+                <option value = "7">P7</option>
+                <option value = "8">P8</option>
+                <option value = "9">P9</option>
+                <option value = "10">P10</option>
+            </select>
+
+            <br>
+            <p id="processSize">Process Size: </p>
+            <input type="text" id="processSizeInput"> K
+        </div>
+
+        <div class="memoryCompaction">
+
+        </div>
+    </div>
+</body>
+
+</html>

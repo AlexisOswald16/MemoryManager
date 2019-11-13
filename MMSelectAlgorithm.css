@@ -1,0 +1,11 @@
+#selectAlgTitle,
+#algorithmDropDown,
+#totalMem,
+#OSMem {
+    display: inline;
+}
+
+#totalMemory,
+#OSMemory {
+    margin-top: 20px;
+}
