@@ -14,38 +14,32 @@ h1 {
 
 .mainGrid {
     display: grid;
-    min-height: 700px;
-    min-width: 800px;
-    grid-template-columns: 50% 50%;
+    height: 700px;
+    width: 800px;
+    grid-template-columns: 60% 40%;
     grid-template-rows: 10% 30% 30% 30%;
-    border: 1px solid black;
     grid-template-areas: "header header" "algorithmSelection memoryImage" "processManager memoryImage" "memoryCompaction memoryImage"
 }
 
 .header {
     grid-area: header;
-    border: 1px solid black;
     text-align: center;
 }
 
 .algorithmSelection {
-    padding: 20px;
+    padding: 50px 20px 20px 20px;
     grid-area: algorithmSelection;
-    border: 1px solid black;
 }
 
 .memoryImage {
     grid-area: memoryImage;
-    border: 1px solid black;
 }
 
 .processManager {
     padding: 20px;
     grid-area: processManager;
-    border: 1px solid black;
 }
 
 .memoryCompaction {
     grid-area: memoryCompaction;
-    border: 1px solid black;
 }
