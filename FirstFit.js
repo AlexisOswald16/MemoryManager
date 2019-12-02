@@ -24,6 +24,7 @@ function getTotalSize() { // gets the total inputted size and sets it at the bot
         var elemToChange = findFreeSpaceElement(); // gets element #
         memoryImageAsArray[elemToChange][1] = Number(totalMemoryInput.value); // changes the size (name and isFull stays the same)
     }
+
 }
 
 function inputOSMemory() {
@@ -35,7 +36,18 @@ function inputOSMemory() {
     } else if (isNaN(OSMemory)) { //if there is no input for the OS, remove the OS
         removeOSMemoryBlock();
     } else {
-        removeOSMemoryBlock(); //removes by image
+        var processName = "OS"
+        var processSize = OSMemory;
+        removeOSMemoryBlock();
+        removeExistingProcessByName("OS");
+        calculateRemainingSpace();
+        addToMemoryArray(processName, Number(processSize));
+        calculateRemainingSpace();
+
+        var row = addNewRow(processSize, processName);
+        row.style.backgroundColor = "#ffffcc"; // changes the color of the OS process
+
+        /*removeOSMemoryBlock(); //removes by image
         var processName = "OS";
         removeExistingProcessByName(processName); //removes by name
         removeFreeSpaceBlock(); //removes from image
@@ -43,7 +55,7 @@ function inputOSMemory() {
         calculateRemainingSpace();
         var row = addNewRow(OSMemory, processName + " " + OSMemory + "K");
         row.style.backgroundColor = "#ffffcc"; // changes the color of the OS process
-        console.log(memoryImageAsArray)
+        console.log(memoryImageAsArray)*/
     }
 }
 
@@ -55,21 +67,29 @@ function inputNewProcess() {
     } else if (parseFloat(processSize) > totalMemorySize) {
         window.alert("The process size cannot exceed the total memory size. Please try again.");
     } else {
-        removeExistingProcessByName(processName);
-        addToMemoryArray(processName, Number(processSize));
-        calculateRemainingSpace();
-        addNewRow(processSize, processName);
+        removeExistingProcessByName(processName); //works
+        if (addToMemoryArray(processName, Number(processSize)) == true) {
+            calculateRemainingSpace();
+            addNewRow(processSize, processName);
+        }
+        console.log(memoryImageAsArray)
     }
 }
 
 function addToMemoryArray(processName, processSize) {
     var hole = findEmptyHoleBigEnough(processSize);
-    var arr = [processName, processSize, 1];
-    if (hole == 0) { //if the hole is at [0], then add the process to the end of the array
-        memoryImageAsArray.push(arr);
-    } else { // otherwise, insert at the element chosen and shift the rest down. 
+    if (hole != undefined) {
         var arr = [processName, processSize, 1];
-        memoryImageAsArray.splice(hole, 0, arr);
+        if (hole == 0) { //if the hole is at [0], then add the process to the end of the array
+            memoryImageAsArray.push(arr);
+        } else { // otherwise, insert at the element chosen and shift the rest down. 
+            var arr = [processName, processSize, 1];
+            memoryImageAsArray.splice(hole, 0, arr);
+        }
+        return true;
+    } else {
+        return false;
+
     }
 }
 
@@ -84,6 +104,7 @@ function calculateRemainingSpace() {
     remainingSpace = totalMemorySize - processSum;
     var elementToUpdate = findFreeSpaceElement();
     memoryImageAsArray[elementToUpdate][1] = remainingSpace;
+
 }
 
 function removeExistingProcessByName(processName) {
@@ -106,7 +127,8 @@ function findEmptyHoleBigEnough(processSize) {
 }
 
 function addNewRow(processSize, name) {
-    var sizePercentage = (parseInt(processSize) / parseInt(remainingSpace)) * 100; //calculates the percent of memory that the OS takes up
+    removeFreeSpaceBlock();
+    var sizePercentage = (parseInt(processSize) / parseInt(totalMemorySize)) * 100; //calculates the percent of memory that the OS takes up
     var rowCount = table.rows.length; //gets the number of rows 
     var row = table.insertRow(rowCount); //inserts a new row at the next available location
     var size = sizePercentage.toString() + "%"; //attaches the unit to the measurement
@@ -122,6 +144,9 @@ function insertProcessLabel(row, label, size) {
     var cell = row.insertCell(0);
     cell.innerHTML = label;
     cell.style.height = size;
+    if (label = "free") { //makes the label invisible if it is 'free' 
+        cell.style.color = "#003399";
+    }
 }
 
 function addRemainingMemoryBlock(remainingPercent) { // adds invisible memory block (for formatting)
@@ -129,6 +154,7 @@ function addRemainingMemoryBlock(remainingPercent) { // adds invisible memory bl
     var rowCount = table.rows.length; // gets the number of rows 
     var row2 = table.insertRow(rowCount); // inserts a new row at the next available location
     row2.style.height = remainingSpaceSize;
+    insertProcessLabel(row2, "free", remainingSpaceSize);
 }
 
 function removeOSMemoryBlock() { // removes the row if it is the one that contains OS Process
