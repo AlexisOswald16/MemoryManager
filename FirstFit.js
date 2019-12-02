@@ -3,7 +3,7 @@
 var table;
 var totalMemoryInput; // input element for total memory
 var totalMemorySize = 4096; // page loads at 4096- this changes on first input
-var remainingSpace = 4096;
+var remainingSpace = 4096; // originally is empty so initializes to totalMemorySize
 var memoryImageAsArray = []; // holds memory and blank space [name,size,empty/full]
 //element 0 will always be the amount of free space
 
@@ -34,28 +34,25 @@ function inputOSMemory() {
     } else if (totalMemoryInput.value == "") { // makes sure that the number typed is an integer
         window.alert("Please insert a value greater than 0 for the total memory size. <br> NOTE: Decimals are not accepted. Please input whole integer numbers greater than 0 only.")
     } else if (isNaN(OSMemory)) { //if there is no input for the OS, remove the OS
-        removeOSMemoryBlock();
+        removeBlockByName("OS"); //removes from image
     } else {
         var processName = "OS"
         var processSize = OSMemory;
-        removeOSMemoryBlock();
-        removeExistingProcessByName("OS");
-        calculateRemainingSpace();
-        addToMemoryArray(processName, Number(processSize));
-        calculateRemainingSpace();
+        removeBlockByName("OS"); //removes from image
+        removeExistingProcessByName("OS"); //removes from array 
+        calculateRemainingSpace(); //figures out how much room there is now, if the OS is being replaced. 
+        addToMemoryArray(processName, Number(processSize)); //adds the OS to the array
+        calculateRemainingSpace(); //figures out how much room there is now that the OS WAS replaced
+        var row = addNewRow(processSize, processName); // adds it to the image
+        row.style.backgroundColor = "#ffffcc"; // changes the color of the OS process so it is different from other processes
+    }
+}
 
-        var row = addNewRow(processSize, processName);
-        row.style.backgroundColor = "#ffffcc"; // changes the color of the OS process
-
-        /*removeOSMemoryBlock(); //removes by image
-        var processName = "OS";
-        removeExistingProcessByName(processName); //removes by name
-        removeFreeSpaceBlock(); //removes from image
-        addToMemoryArray(processName, OSMemory);
-        calculateRemainingSpace();
-        var row = addNewRow(OSMemory, processName + " " + OSMemory + "K");
-        row.style.backgroundColor = "#ffffcc"; // changes the color of the OS process
-        console.log(memoryImageAsArray)*/
+function processPreviouslyAdded(processName) {
+    for (let i = 0; i < memoryImageAsArray.length; i++) {
+        if (memoryImageAsArray[i][0] == processName) {
+            return true;
+        }
     }
 }
 
@@ -64,15 +61,23 @@ function inputNewProcess() {
     var processSize = document.getElementById("processSizeInput").value;
     if (processSize.includes(" ") || isNaN(parseFloat(processSize))) {
         window.alert("There was an error in the size of your process. Your process size must not contain spaces. Please try again.");
-    } else if (parseFloat(processSize) > totalMemorySize) {
-        window.alert("The process size cannot exceed the total memory size. Please try again.");
-    } else {
-        removeExistingProcessByName(processName); //works
+    } else if (processPreviouslyAdded(processName)) {
+        removeExistingProcessByName(processName);
+        removeBlockByName(processName);
+        calculateRemainingSpace();
         if (addToMemoryArray(processName, Number(processSize)) == true) {
             calculateRemainingSpace();
             addNewRow(processSize, processName);
         }
-        console.log(memoryImageAsArray)
+    } else if (parseFloat(processSize) > totalMemorySize) {
+        window.alert("The process size cannot exceed the total memory size. Please try again.");
+    } else {
+        removeExistingProcessByName(processName);
+        removeBlockByName(processName);
+        if (addToMemoryArray(processName, Number(processSize)) == true) {
+            calculateRemainingSpace();
+            addNewRow(processSize, processName);
+        }
     }
 }
 
@@ -127,7 +132,7 @@ function findEmptyHoleBigEnough(processSize) {
 }
 
 function addNewRow(processSize, name) {
-    removeFreeSpaceBlock();
+    removeBlockByName("free");
     var sizePercentage = (parseInt(processSize) / parseInt(totalMemorySize)) * 100; //calculates the percent of memory that the OS takes up
     var rowCount = table.rows.length; //gets the number of rows 
     var row = table.insertRow(rowCount); //inserts a new row at the next available location
@@ -157,12 +162,9 @@ function addRemainingMemoryBlock(remainingPercent) { // adds invisible memory bl
     insertProcessLabel(row2, "free", remainingSpaceSize);
 }
 
-function removeOSMemoryBlock() { // removes the row if it is the one that contains OS Process
-    $('#memoryTable td:contains("OS")').parents("tr").remove();
-}
-
-function removeFreeSpaceBlock() {
-    $('#memoryTable td:contains("free")').parents("tr").remove();
+function removeBlockByName(processName) { //removes row from image 
+    var stringPass = '#memoryTable td:contains("' + processName + '")';
+    $(stringPass).parents("tr").remove();
 
 }
 
