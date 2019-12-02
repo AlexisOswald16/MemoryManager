@@ -24,7 +24,6 @@ function getTotalSize() { // gets the total inputted size and sets it at the bot
         var elemToChange = findFreeSpaceElement(); // gets element #
         memoryImageAsArray[elemToChange][1] = Number(totalMemoryInput.value); // changes the size (name and isFull stays the same)
     }
-
 }
 
 function inputOSMemory() {
@@ -44,17 +43,45 @@ function inputOSMemory() {
         addToMemoryArray(processName, Number(processSize)); //adds the OS to the array
         calculateRemainingSpace(); //figures out how much room there is now that the OS WAS replaced
         var row = addNewRow(processSize, processName); // adds it to the image
+        addRemainingMemoryBlock(); //adds the blank space to the memory block
         row.style.backgroundColor = "#ffffcc"; // changes the color of the OS process so it is different from other processes
     }
 }
 
-function processPreviouslyAdded(processName) {
+function processPreviouslyAdded(processName) { //finds if a process is already in the array
     for (let i = 0; i < memoryImageAsArray.length; i++) {
         if (memoryImageAsArray[i][0] == processName) {
             return true;
         }
     }
 }
+
+function removeProcess() {
+    var processName = document.getElementById("processesID").options[document.getElementById("processesID").value - 1].text;
+    for (let i = 0; i < memoryImageAsArray.length; i++) {
+        if (memoryImageAsArray[i][0] == processName) {
+            memoryImageAsArray[i][0] = "empty"; // removes process name
+            memoryImageAsArray[i][2] = 0; // signals as not full
+        }
+    }
+    var row = document.getElementById(processName);
+    row.style.backgroundColor = "#003399"; // changes the color of the process
+    console.log(memoryImageAsArray);
+    /*
+    TODO: when a process is being added, it needs to look for the first open hole (not including the one labeled 'free')
+        if 'free' is the only hole large enough --> add the process to the end of the array and image
+        otherwise, add it in the exact position of the free spot.
+        
+        for the free spot...
+            insert the process in the free spot (splice already in use)
+            adjust the size of 'empty' (emptySize - newProcess) both in the array and the image
+    */
+}
+
+function alterEmptyBlock(position) {
+    //to develop- should take care of adjusting the size of empty after a process is added into an empty block
+}
+
 
 function inputNewProcess() {
     var processName = document.getElementById("processesID").options[document.getElementById("processesID").value - 1].text;
@@ -68,6 +95,7 @@ function inputNewProcess() {
         if (addToMemoryArray(processName, Number(processSize)) == true) {
             calculateRemainingSpace();
             addNewRow(processSize, processName);
+            addRemainingMemoryBlock();
         }
     } else if (parseFloat(processSize) > totalMemorySize) {
         window.alert("The process size cannot exceed the total memory size. Please try again.");
@@ -77,6 +105,7 @@ function inputNewProcess() {
         if (addToMemoryArray(processName, Number(processSize)) == true) {
             calculateRemainingSpace();
             addNewRow(processSize, processName);
+            addRemainingMemoryBlock();
         }
     }
 }
@@ -94,7 +123,6 @@ function addToMemoryArray(processName, processSize) {
         return true;
     } else {
         return false;
-
     }
 }
 
@@ -121,6 +149,7 @@ function removeExistingProcessByName(processName) {
 }
 
 function findEmptyHoleBigEnough(processSize) {
+    //TODO: skip the first element - if there is no other hole, then check element 0. (element 0 should be last choice)
     for (let i = 0; i < memoryImageAsArray.length; i++) {
         if (memoryImageAsArray[i][2] == 0) { //if the hole is not full
             if (memoryImageAsArray[i][1] >= processSize) { //if the hole is big enough
@@ -138,10 +167,10 @@ function addNewRow(processSize, name) {
     var row = table.insertRow(rowCount); //inserts a new row at the next available location
     var size = sizePercentage.toString() + "%"; //attaches the unit to the measurement
     remainingSpaceSize = 100 - parseFloat(sizePercentage); //finds other percent for the blank space/remaining
+    row.id = name;
     row.style.height = size; // sets row height
     row.style.backgroundColor = "#ffe6ff"; // changes the color of the process
     insertProcessLabel(row, name, size);
-    addRemainingMemoryBlock(remainingSpaceSize);
     return row;
 }
 
@@ -154,8 +183,8 @@ function insertProcessLabel(row, label, size) {
     }
 }
 
-function addRemainingMemoryBlock(remainingPercent) { // adds invisible memory block (for formatting)
-    var remainingSpaceSize = remainingPercent + "%"; // makes it a percent
+function addRemainingMemoryBlock() { // adds invisible memory block (for formatting)
+    remainingSpaceSize = remainingSpaceSize + "%"; // makes it a percent
     var rowCount = table.rows.length; // gets the number of rows 
     var row2 = table.insertRow(rowCount); // inserts a new row at the next available location
     row2.style.height = remainingSpaceSize;
