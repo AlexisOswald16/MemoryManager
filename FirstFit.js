@@ -5,6 +5,7 @@ var totalMemoryInput; // input element for total memory
 var totalMemorySize = 4096; // page loads at 4096- this changes on first input
 var remainingSpace = 4096; // originally is empty so initializes to totalMemorySize
 var memoryImageAsArray = []; // holds memory and blank space [name,size,empty/full]
+
 //element 0 will always be the amount of free space
 
 memoryImageAsArray[0] = ["free", totalMemorySize, 0]; // initializes image as all free space 
@@ -66,37 +67,15 @@ function removeProcess() {
     }
     var row = document.getElementById(processName);
     row.style.backgroundColor = "#003399"; // changes the color of the process
-    console.log(memoryImageAsArray);
-    /*
-    TODO: when a process is being added, it needs to look for the first open hole (not including the one labeled 'free')
-        if 'free' is the only hole large enough --> add the process to the end of the array and image
-        otherwise, add it in the exact position of the free spot.
-        
-        for the free spot...
-            insert the process in the free spot (splice already in use)
-            adjust the size of 'empty' (emptySize - newProcess) both in the array and the image
-    */
 }
-
-function alterEmptyBlock(position) {
-    //to develop- should take care of adjusting the size of empty after a process is added into an empty block
-}
-
 
 function inputNewProcess() {
     var processName = document.getElementById("processesID").options[document.getElementById("processesID").value - 1].text;
     var processSize = document.getElementById("processSizeInput").value;
     if (processSize.includes(" ") || isNaN(parseFloat(processSize))) {
         window.alert("There was an error in the size of your process. Your process size must not contain spaces. Please try again.");
-    } else if (processPreviouslyAdded(processName)) {
-        removeExistingProcessByName(processName);
-        removeBlockByName(processName);
-        calculateRemainingSpace();
-        if (addToMemoryArray(processName, Number(processSize)) == true) {
-            calculateRemainingSpace();
-            addNewRow(processSize, processName);
-            addRemainingMemoryBlock();
-        }
+    } else if (processPreviouslyAdded(processName)) { //if a process is already existing, it can't be added again
+        window.alert("That process is already in memory. Please try again.");
     } else if (parseFloat(processSize) > totalMemorySize) {
         window.alert("The process size cannot exceed the total memory size. Please try again.");
     } else {
@@ -108,22 +87,57 @@ function inputNewProcess() {
             addRemainingMemoryBlock();
         }
     }
+    recreateImage(); //recreates memory image with the correct sizes/colors
+}
+
+function findEmptyHoleBigEnough(processSize) {
+    console.log(memoryImageAsArray)
+    for (let i = 1; i < memoryImageAsArray.length; i++) {
+        if (memoryImageAsArray[i][2] == 0) { //if the hole is not full
+            if (memoryImageAsArray[i][1] >= processSize) { //if the hole is big enough
+                return i;
+            }
+        }
+    }
+    if (memoryImageAsArray[0][1] >= processSize) { // if there isn't a hole, then check if the bottom free space is available
+        return 0;
+    }
+    window.alert("There is no empty space available for your process. You may try to compact to make more room for your process.")
 }
 
 function addToMemoryArray(processName, processSize) {
-    var hole = findEmptyHoleBigEnough(processSize);
+    var hole = findEmptyHoleBigEnough(processSize); //index of where it should be added
+    console.log("Index of row " + hole)
     if (hole != undefined) {
         var arr = [processName, processSize, 1];
         if (hole == 0) { //if the hole is at [0], then add the process to the end of the array
+            console.log("at hole = 0")
             memoryImageAsArray.push(arr);
         } else { // otherwise, insert at the element chosen and shift the rest down. 
             var arr = [processName, processSize, 1];
-            memoryImageAsArray.splice(hole, 0, arr);
+            if (processSize != memoryImageAsArray[hole][1]) {
+                var oldSize = memoryImageAsArray[hole][1];
+                var newSize = processSize;
+                var newRemaining = oldSize - newSize;
+                memoryImageAsArray.splice(hole, 0, arr);
+                arr2 = ["empty", newRemaining, 0];
+                memoryImageAsArray.splice(hole + 1, 1, arr2);
+            } else {
+                memoryImageAsArray.splice(hole, 1, arr);
+            }
         }
         return true;
     } else {
         return false;
     }
+}
+
+function recreateImage() {
+    removeAllRows();
+    for (let i = 1; i < memoryImageAsArray.length; i++) {
+        addNewRow(memoryImageAsArray[i][1], memoryImageAsArray[i][0]);
+    }
+    addNewRow(memoryImageAsArray[0][1], memoryImageAsArray[0][0]);
 }
 
 function calculateRemainingSpace() {
@@ -133,14 +147,14 @@ function calculateRemainingSpace() {
             processSizes.push(memoryImageAsArray[i][1]);
         }
     }
-    var processSum = processSizes.reduce((a, b) => a + b, 0);
+    var processSum = processSizes.reduce((a, b) => a + b, 0); //adds all processes in array
     remainingSpace = totalMemorySize - processSum;
     var elementToUpdate = findFreeSpaceElement();
     memoryImageAsArray[elementToUpdate][1] = remainingSpace;
 
 }
 
-function removeExistingProcessByName(processName) {
+function removeExistingProcessByName(processName) { //removes process from array and shifts to cover the empty hole
     for (let i = 0; i < memoryImageAsArray.length; i++) {
         if (memoryImageAsArray[i][0] == processName) {
             memoryImageAsArray.splice(i, 1);
@@ -148,28 +162,29 @@ function removeExistingProcessByName(processName) {
     }
 }
 
-function findEmptyHoleBigEnough(processSize) {
-    //TODO: skip the first element - if there is no other hole, then check element 0. (element 0 should be last choice)
-    for (let i = 0; i < memoryImageAsArray.length; i++) {
-        if (memoryImageAsArray[i][2] == 0) { //if the hole is not full
-            if (memoryImageAsArray[i][1] >= processSize) { //if the hole is big enough
-                return i;
-            }
-        }
-    }
-    window.alert("There is no empty space available for your process. You may try to compact to make more room for your process.")
-}
-
 function addNewRow(processSize, name) {
     removeBlockByName("free");
     var sizePercentage = (parseInt(processSize) / parseInt(totalMemorySize)) * 100; //calculates the percent of memory that the OS takes up
-    var rowCount = table.rows.length; //gets the number of rows 
-    var row = table.insertRow(rowCount); //inserts a new row at the next available location
+    var index = 0;
+    for (let i = 0; i < memoryImageAsArray.length; i++) {
+        if (memoryImageAsArray[i][0] == name) {
+            index = i;
+        }
+    }
+    var row = table.insertRow(index - 1); //inserts a new row at the next available location
     var size = sizePercentage.toString() + "%"; //attaches the unit to the measurement
     remainingSpaceSize = 100 - parseFloat(sizePercentage); //finds other percent for the blank space/remaining
     row.id = name;
     row.style.height = size; // sets row height
-    row.style.backgroundColor = "#ffe6ff"; // changes the color of the process
+
+    if (name == "OS") {
+        row.style.backgroundColor = "#ffffcc"; // changes the color of the OS process so it is different from other processes
+    } else if (name == "empty" || name == "free") { //makes the color the same as the background if it is not a process 
+        row.style.backgroundColor = "#003399";
+    } else {
+        row.style.backgroundColor = "#ffe6ff"; // changes the color of the process
+
+    }
     insertProcessLabel(row, name, size);
     return row;
 }
@@ -194,7 +209,6 @@ function addRemainingMemoryBlock() { // adds invisible memory block (for formatt
 function removeBlockByName(processName) { //removes row from image 
     var stringPass = '#memoryTable td:contains("' + processName + '")';
     $(stringPass).parents("tr").remove();
-
 }
 
 function removeAllRows() { //resets memory image to have nothing inserted
