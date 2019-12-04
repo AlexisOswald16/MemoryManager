@@ -144,12 +144,17 @@ function addToMemoryArray(processName, processSize) {
     }
 }
 
-function recreateImage() { //remakes the entire image
+function recreateImage() { // remakes the entire image
     removeAllRows();
+    var indexOfFree = 0;
     for (let i = 1; i < memoryImageAsArray.length; i++) {
-        addNewRow(memoryImageAsArray[i][1], memoryImageAsArray[i][0]);
+        if (memoryImageAsArray[i][0] != "free") { // add all except free space, because that should be at bottom
+            addNewRow(memoryImageAsArray[i][1], memoryImageAsArray[i][0]);
+        } else {
+            indexOfFree = i; //remember which index free space is 
+        }
     }
-    addNewRow(memoryImageAsArray[0][1], memoryImageAsArray[0][0]);
+    addNewRow(memoryImageAsArray[indexOfFree][1], memoryImageAsArray[indexOfFree][0]); //add free space last
 }
 
 function calculateRemainingSpace() {
@@ -183,6 +188,8 @@ function addNewRow(processSize, name) {
             index = i;
         }
     }
+    console.log(index);
+    console.log(table.rows);
     var row = table.insertRow(index - 1); //inserts a new row at the next available location
     var size = sizePercentage.toString() + "%"; //attaches the unit to the measurement
     remainingSpaceSize = 100 - parseFloat(sizePercentage); //finds other percent for the blank space/remaining
