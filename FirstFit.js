@@ -39,9 +39,9 @@ function inputOSMemory() {
         removeBlockByName("OS"); //removes from image
         removeExistingProcessByName("OS"); //removes from array 
         calculateRemainingSpace(); //figures out how much room there is now, if the OS is being replaced. 
-        addToMemoryArray(processName, Number(processSize)); //adds the OS to the array
+        addToMemoryArrayFF(processName, Number(processSize)); //adds the OS to the array
         calculateRemainingSpace(); //figures out how much room there is now that the OS WAS replaced
-        var row = addNewRow(processSize, processName); // adds it to the image
+        var row = addNewRowFF(processSize, processName); // adds it to the image
         addRemainingMemoryBlock(); //adds the blank space to the memory block
         row.style.backgroundColor = "#ffffcc"; // changes the color of the OS process so it is different from other processes
     }
@@ -57,14 +57,19 @@ function processPreviouslyAdded(processName) { //finds if a process is already i
 
 function removeProcess() {
     var processName = document.getElementById("processesID").options[document.getElementById("processesID").value - 1].text;
+    var removed = 0;
     for (let i = 0; i < memoryImageAsArray.length; i++) {
         if (memoryImageAsArray[i][0] == processName) {
             memoryImageAsArray[i][0] = "empty"; // removes process name
             memoryImageAsArray[i][2] = 0; // signals as not full
+            var row = document.getElementById(processName);
+            row.style.backgroundColor = "#003399"; // changes the color of the process
+            removed = 1;
         }
     }
-    var row = document.getElementById(processName);
-    row.style.backgroundColor = "#003399"; // changes the color of the process
+    if (removed == 0) { //if nothing was removed 
+        window.alert("Process " + processName + " is not in memory and therefore cannot be removed.");
+    }
 }
 
 function compactMemory() {
@@ -94,32 +99,113 @@ function inputNewProcess() {
     } else if (parseFloat(processSize) > totalMemorySize) {
         window.alert("The process size cannot exceed the total memory size. Please try again.");
     } else {
-        removeExistingProcessByName(processName);
-        removeBlockByName(processName);
-        if (addToMemoryArray(processName, Number(processSize)) == true) {
-            calculateRemainingSpace();
-            addNewRow(processSize, processName);
-            addRemainingMemoryBlock();
+        var selected = document.getElementById("algorithmDropDown");
+        var alg = selected.options[selected.selectedIndex].text;
+        if (alg == "First Fit") {
+            if (addToMemoryArrayFF(processName, Number(processSize)) == true) {
+                calculateRemainingSpace();
+                addNewRowFF(processSize, processName);
+                addRemainingMemoryBlock();
+            }
+        } else if (alg == "Worst Fit") {
+            if (addToMemoryArrayWF(processName, Number(processSize)) == true) {
+                calculateRemainingSpace();
+                addNewRowWF(processSize, processName);
+                addRemainingMemoryBlock();
+            }
+        } else if (alg == "Best Fit") {
+
         }
+        recreateImage(); //recreates memory image with the correct sizes/colors
     }
-    recreateImage(); //recreates memory image with the correct sizes/colors
 }
 
-function findEmptyHoleBigEnough(processSize) {
-    for (let i = 1; i < memoryImageAsArray.length; i++) {
-        if (memoryImageAsArray[i][2] == 0) { //if the hole is not full
-            if (memoryImageAsArray[i][1] >= processSize) { //if the hole is big enough
-                return i;
+function findWorstHole(processSize) {
+    var largestHoleSize = 0;
+    var largestHoleIndex = 0;
+    for (let i = 0; i < memoryImageAsArray.length; i++) {
+        if (memoryImageAsArray[i][2] == 0 && memoryImageAsArray[i][1] >= processSize) { //if the hole is not full
+            if (memoryImageAsArray[i][1] > largestHoleSize) {
+                largestHoleSize = memoryImageAsArray[i][1];
+                largestHoleIndex = i;
             }
         }
     }
-    if (memoryImageAsArray[0][1] >= processSize) { // if there isn't a hole, then check if the bottom free space is available
-        return 0;
+    if (largestHoleSize == 0) {
+        window.alert("There is no empty space available for your process. You may try to compact to make more room for your process.")
+    } else {
+        return largestHoleIndex;
     }
-    window.alert("There is no empty space available for your process. You may try to compact to make more room for your process.")
+
 }
 
-function addToMemoryArray(processName, processSize) {
+function addToMemoryArrayWF(processName, processSize) {
+    //add to biggest hole first. 
+    var hole = findWorstHole(processSize); // index of where it should be added
+    if (hole != undefined) { //prevents a process that is too large from being added (too large = undefined)
+        var arr = [processName, processSize, 1];
+        if (hole == 0) { // if the hole is at [0], then add the process to the end of the array
+            memoryImageAsArray.push(arr);
+        } else { // otherwise, insert at the element chosen and shift the rest down. 
+            var arr = [processName, processSize, 1];
+            if (processSize != memoryImageAsArray[hole][1]) {
+                var oldSize = memoryImageAsArray[hole][1];
+                var newSize = processSize;
+                var newRemaining = oldSize - newSize;
+                memoryImageAsArray.splice(hole, 0, arr);
+                arr2 = ["empty", newRemaining, 0];
+                memoryImageAsArray.splice(hole + 1, 1, arr2);
+            } else {
+                memoryImageAsArray.splice(hole, 1, arr);
+            }
+        }
+        return true;
+    } else {
+        return false;
+    }
+}
+
+function addNewRowWF(processSize, name) {
+    removeBlockByName("free");
+    var sizePercentage = (parseInt(processSize) / parseInt(totalMemorySize)) * 100; //calculates the percent of memory that the OS takes up
+    var index = 0;
+    for (let i = 0; i < memoryImageAsArray.length; i++) {
+        if (memoryImageAsArray[i][0] == name) {
+            index = i;
+        }
+    }
+    var row = table.insertRow(index - 1); //inserts a new row at the next available location
+    var size = sizePercentage.toString() + "%"; //attaches the unit to the measurement
+    remainingSpaceSize = 100 - parseFloat(sizePercentage); //finds other percent for the blank space/remaining
+    row.id = name;
+    row.style.height = size; // sets row height
+
+    if (name == "OS") {
+        row.style.backgroundColor = "#ffffcc"; // changes the color of the OS process so it is different from other processes
+    } else if (name == "empty" || name == "free") { //makes the color the same as the background if it is not a process 
+        row.style.backgroundColor = "#003399";
+    } else {
+        row.style.backgroundColor = "#ffe6ff"; // changes the color of the process
+
+    }
+    insertProcessLabel(row, name, size);
+    return row;
+}
+
+function calculateRemainingSpace() {
+    var processSizes = [];
+    for (let i = 0; i < memoryImageAsArray.length; i++) {
+        if (memoryImageAsArray[i][2] == 1) { // if the section is full, add it to the process sizes array
+            processSizes.push(memoryImageAsArray[i][1]);
+        }
+    }
+    var processSum = processSizes.reduce((a, b) => a + b, 0); //adds all processes in array
+    remainingSpace = totalMemorySize - processSum;
+    var elementToUpdate = findFreeSpaceElement();
+    memoryImageAsArray[elementToUpdate][1] = remainingSpace;
+}
+
+function addToMemoryArrayFF(processName, processSize) {
     var hole = findEmptyHoleBigEnough(processSize); // index of where it should be added
     if (hole != undefined) { //prevents a process that is too large from being added (too large = undefined)
         var arr = [processName, processSize, 1];
@@ -149,12 +235,12 @@ function recreateImage() { // remakes the entire image
     var indexOfFree = 0;
     for (let i = 1; i < memoryImageAsArray.length; i++) {
         if (memoryImageAsArray[i][0] != "free") { // add all except free space, because that should be at bottom
-            addNewRow(memoryImageAsArray[i][1], memoryImageAsArray[i][0]);
+            addNewRowFF(memoryImageAsArray[i][1], memoryImageAsArray[i][0]);
         } else {
             indexOfFree = i; //remember which index free space is 
         }
     }
-    addNewRow(memoryImageAsArray[indexOfFree][1], memoryImageAsArray[indexOfFree][0]); //add free space last
+    addNewRowFF(memoryImageAsArray[indexOfFree][1], memoryImageAsArray[indexOfFree][0]); //add free space last
 }
 
 function calculateRemainingSpace() {
@@ -168,7 +254,6 @@ function calculateRemainingSpace() {
     remainingSpace = totalMemorySize - processSum;
     var elementToUpdate = findFreeSpaceElement();
     memoryImageAsArray[elementToUpdate][1] = remainingSpace;
-
 }
 
 function removeExistingProcessByName(processName) { //removes process from array and shifts to cover the empty hole
@@ -179,7 +264,7 @@ function removeExistingProcessByName(processName) { //removes process from array
     }
 }
 
-function addNewRow(processSize, name) {
+function addNewRowFF(processSize, name) {
     removeBlockByName("free");
     var sizePercentage = (parseInt(processSize) / parseInt(totalMemorySize)) * 100; //calculates the percent of memory that the OS takes up
     var index = 0;
@@ -188,8 +273,6 @@ function addNewRow(processSize, name) {
             index = i;
         }
     }
-    console.log(index);
-    console.log(table.rows);
     var row = table.insertRow(index - 1); //inserts a new row at the next available location
     var size = sizePercentage.toString() + "%"; //attaches the unit to the measurement
     remainingSpaceSize = 100 - parseFloat(sizePercentage); //finds other percent for the blank space/remaining
@@ -240,4 +323,18 @@ function findFreeSpaceElement() { // returns int of the element that takes care 
             return i;
         }
     }
+}
+
+function findEmptyHoleBigEnough(processSize) {
+    for (let i = 1; i < memoryImageAsArray.length; i++) {
+        if (memoryImageAsArray[i][2] == 0) { //if the hole is not full
+            if (memoryImageAsArray[i][1] >= processSize) { //if the hole is big enough
+                return i;
+            }
+        }
+    }
+    if (memoryImageAsArray[0][1] >= processSize) { // if there isn't a hole, then check if the bottom free space is available
+        return 0;
+    }
+    window.alert("There is no empty space available for your process. You may try to compact to make more room for your process.")
 }
