@@ -6,8 +6,6 @@ var totalMemorySize = 4096; // page loads at 4096- this changes on first input
 var remainingSpace = 4096; // originally is empty so initializes to totalMemorySize
 var memoryImageAsArray = []; // holds memory and blank space [name,size,empty/full]
 
-//element 0 will always be the amount of free space
-
 memoryImageAsArray[0] = ["free", totalMemorySize, 0]; // initializes image as all free space 
 
 function onLoad() {
@@ -69,6 +67,23 @@ function removeProcess() {
     row.style.backgroundColor = "#003399"; // changes the color of the process
 }
 
+function compactMemory() {
+    //will remove all empty space from the array and add it all to element[0] (free space), then recreate the image
+    var extraSpace = 0;
+    for (let i = 0; i < memoryImageAsArray.length; i++) {
+        if (memoryImageAsArray[i][2] == 0 && memoryImageAsArray[i][0] != "free") {
+            extraSpace += memoryImageAsArray[i][1];
+            memoryImageAsArray.splice(i, 1); // removes the free space
+        }
+    }
+    for (let i = 0; i < memoryImageAsArray.length; i++) {
+        if (memoryImageAsArray[i][0] == "free") {
+            memoryImageAsArray[i][1] == extraSpace;
+        }
+    }
+    recreateImage();
+}
+
 function inputNewProcess() {
     var processName = document.getElementById("processesID").options[document.getElementById("processesID").value - 1].text;
     var processSize = document.getElementById("processSizeInput").value;
@@ -91,7 +106,6 @@ function inputNewProcess() {
 }
 
 function findEmptyHoleBigEnough(processSize) {
-    console.log(memoryImageAsArray)
     for (let i = 1; i < memoryImageAsArray.length; i++) {
         if (memoryImageAsArray[i][2] == 0) { //if the hole is not full
             if (memoryImageAsArray[i][1] >= processSize) { //if the hole is big enough
@@ -106,12 +120,10 @@ function findEmptyHoleBigEnough(processSize) {
 }
 
 function addToMemoryArray(processName, processSize) {
-    var hole = findEmptyHoleBigEnough(processSize); //index of where it should be added
-    console.log("Index of row " + hole)
-    if (hole != undefined) {
+    var hole = findEmptyHoleBigEnough(processSize); // index of where it should be added
+    if (hole != undefined) { //prevents a process that is too large from being added (too large = undefined)
         var arr = [processName, processSize, 1];
-        if (hole == 0) { //if the hole is at [0], then add the process to the end of the array
-            console.log("at hole = 0")
+        if (hole == 0) { // if the hole is at [0], then add the process to the end of the array
             memoryImageAsArray.push(arr);
         } else { // otherwise, insert at the element chosen and shift the rest down. 
             var arr = [processName, processSize, 1];
@@ -132,7 +144,7 @@ function addToMemoryArray(processName, processSize) {
     }
 }
 
-function recreateImage() {
+function recreateImage() { //remakes the entire image
     removeAllRows();
     for (let i = 1; i < memoryImageAsArray.length; i++) {
         addNewRow(memoryImageAsArray[i][1], memoryImageAsArray[i][0]);
