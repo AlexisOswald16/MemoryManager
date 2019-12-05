@@ -160,9 +160,14 @@ function recreateImage() { // remakes the entire image
 }
 
 function insertProcessLabel(row, label, size) {
+
     var cell = row.insertCell(0);
+    if (label != "free") {
+        cell.class = "boxshadow";
+    }
     cell.innerHTML = label;
     cell.style.height = size;
+    cell.style.textAlign = "center";
     if (label = "free") { //makes the label invisible if it is 'free' 
         cell.style.color = "#003399";
     }
@@ -258,9 +263,9 @@ function addNewRowFF(processSize, name) {
         row.style.backgroundColor = "#003399";
     } else {
         row.style.backgroundColor = "#ffe6ff"; // changes the color of the process
-
     }
-    insertProcessLabel(row, name, size);
+    var processName = name + " Size: " + processSize + "K";
+    insertProcessLabel(row, processName, size);
     return row;
 }
 

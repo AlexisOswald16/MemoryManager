@@ -1,19 +1,38 @@
 body {
-    font-family: Optima, sans-serif;
+    font-family: titleFont;
+    font-size: 30px;
+    background-color: #f2f2f2;
+}
+
+select {
+    font-family: titleFont;
     font-size: 20px;
+}
+
+tr {
+    font-weight: bold;
+}
+
+option {
+    font-size: 12px;
+}
+
+@font-face {
+    font-family: titleFont;
+    src: url(SIMPLIFICA.ttf);
 }
 
 #memoryTable {
     background-color: #003399;
 }
 
-html {
-    font-family: Optima, sans-serif;
-}
-
 h1 {
+    font-family: titleFont;
+    font-size: 50px;
     margin: 0;
     padding-top: 15px;
+    color: navy;
+    text-shadow: 1px 1px grey;
 }
 
 .mainGrid {
@@ -53,6 +72,7 @@ h1 {
 #processSize,
 #processSizeInput {
     display: inline;
+    margin-bottom: 20px;
 }
 
 #selectAlgTitle,
@@ -76,7 +96,7 @@ h1 {
     color: darkblue;
     text-align: center;
     text-transform: uppercase;
-    font-size: 14px;
+    font-size: 24px;
     padding: 10px;
     width: 1000px;
     transition: all 0.4s;
@@ -94,7 +114,7 @@ h1 {
     color: darkblue;
     text-align: center;
     text-transform: uppercase;
-    font-size: 18px;
+    font-size: 28px;
     padding: 20px;
     width: 150px;
     transition: all 0.4s;
@@ -141,4 +161,28 @@ h1 {
 .leftArrowBtn:hover span:after {
     opacity: 1;
     right: 0;
+}
+
+
+/**/
+
+.boxshadow {
+    position: relative;
+    box-shadow: 5px 2px 4px rgba(0, 0, 0, .5);
+    background: white;
+}
+
+
+/* Make the image fit the box */
+
+.boxshadow::after {
+    position: absolute;
+    z-index: -1;
+    /* hide shadow behind image */
+    box-shadow: 0 20px 20px rgba(0, 0, 0, 0.3);
+    width: 70%;
+    left: 15%;
+    /* one half of the remaining 30% */
+    height: 100px;
+    bottom: 0;
 }
