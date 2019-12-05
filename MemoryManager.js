@@ -174,11 +174,12 @@ function addRemainingMemoryBlock() { // adds invisible memory block (for formatt
 function calculateRemainingSpace() {
     var processSizes = [];
     for (let i = 0; i < memoryImageAsArray.length; i++) {
-        if (memoryImageAsArray[i][2] == 1) { // if the section is full, add it to the process sizes array
+        if (memoryImageAsArray[i][2] == 1 || memoryImageAsArray[i][0] == "Empty") { // if the section is full or if it's empty space we have to account for, add it to the process sizes array
             processSizes.push(memoryImageAsArray[i][1]);
         }
     }
     processSum = processSizes.reduce((a, b) => a + b, 0); //adds all processes in array
+
     remainingSpace = totalMemorySize - processSum;
     var elementToUpdate = findFreeSpaceElement();
     memoryImageAsArray[elementToUpdate][1] = remainingSpace;
