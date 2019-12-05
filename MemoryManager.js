@@ -135,23 +135,24 @@ function removeProcess() {
     }
     if (removed == 0) { //if nothing was removed 
         window.alert("Process " + processName + " is not in memory and therefore cannot be removed.");
-    } else {
-        recreateImage()
     }
+    recreateImage()
+
 }
 
 // .....................................................UNIVERSAL GRAPHIC ALTERING FUNCTIONS......................................................
 function recreateImage() { // remakes the entire image
     removeAllRows();
+    calculateRemainingSpace();
     var indexOfFree = 0;
     for (let i = 1; i < memoryImageAsArray.length; i++) {
         if (memoryImageAsArray[i][0] != "Free") { // add all except free space, because that should be at bottom
-            addNewRow(memoryImageAsArray[i][1], memoryImageAsArray[i][0]);
+            addNewRow(memoryImageAsArray[i][1], memoryImageAsArray[i][0], i);
         } else {
             indexOfFree = i; //remember which index free space is 
         }
     }
-    addNewRow(memoryImageAsArray[indexOfFree][1], memoryImageAsArray[indexOfFree][0]); //add free space last
+    addNewRow(memoryImageAsArray[indexOfFree][1], memoryImageAsArray[indexOfFree][0], memoryImageAsArray.length); //add free space last
 }
 
 function insertProcessLabel(row, label, size) {
@@ -232,15 +233,9 @@ function addToMemoryArrayFF(processName, processSize) {
 }
 
 
-function addNewRow(processSize, name) {
+function addNewRow(processSize, name, index) {
     removeBlockByName("Free");
     var sizePercentage = (parseInt(processSize) / parseInt(totalMemorySize)) * 100; //calculates the percent of memory that the OS takes up
-    var index = 0;
-    for (let i = 0; i < memoryImageAsArray.length; i++) {
-        if (memoryImageAsArray[i][0] == name) {
-            index = i;
-        }
-    }
     var row = table.insertRow(index - 1); //inserts a new row at the next available location
     var size = sizePercentage.toString() + "%"; //attaches the unit to the measurement
     remainingSpaceSize = 100 - parseFloat(sizePercentage); //finds other percent for the blank space/remaining
