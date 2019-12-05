@@ -34,16 +34,29 @@ function processPreviouslyAdded(processName) { //finds if a process is already i
     }
 }
 
+function combineAdjacentEmpty(index1, index2) {
+    console.log(memoryImageAsArray);
+
+    var elem1 = memoryImageAsArray[index1];
+    var elem2 = memoryImageAsArray[index2];
+    elem1[1] == elem1[1] + elem2[1];
+    console.log(memoryImageAsArray);
+    memoryImageAsArray.splice(index2, 0);
+    console.log(memoryImageAsArray);
+}
+
 function getTotalSize() { // gets the total inputted size and sets it at the bottom of the image
-    totalMemorySize = document.getElementById("totalSizeTag").innerHTML;
     if (totalMemoryInput.value == "") {
         window.alert("Please insert a value greater than 0 for the total memory size. <br> NOTE: Decimals are not accepted. Please input whole integer numbers greater than 0 only.")
     } else {
+        totalMemorySize = totalMemoryInput.value;
         totalMemorySizeTag = totalMemoryInput.value + "K"; // the name changes as you type
         document.getElementById("totalSizeTag").innerHTML = totalMemorySizeTag; // sets the text on the page
         var elemToChange = findFreeSpaceElement(); // gets element index
         memoryImageAsArray[elemToChange][1] = Number(totalMemoryInput.value); // changes the size (name and isFull stays the same)
     }
+    calculateRemainingSpace();
+    recreateImage();
 }
 
 function removeExistingProcessByName(processName) { //removes process from array and shifts to cover the empty hole
@@ -132,28 +145,6 @@ function removeProcess() {
     }
 }
 
-function inputOSMemory() {
-    var OSMemory = parseInt(document.getElementById("OSMemory").value); //gets the size of the OS memory
-    if (parseInt(OSMemory) > parseInt(totalMemorySize)) { // makes sure OS memory is less than Total Memory
-        window.alert("The OS Memory cannot be greater than the total memory, please review the inputs and try again.")
-    } else if (totalMemoryInput.value == "") { // makes sure that the number typed is an integer
-        window.alert("Please insert a value greater than 0 for the total memory size. <br> NOTE: Decimals are not accepted. Please input whole integer numbers greater than 0 only.")
-    } else if (isNaN(OSMemory)) { //if there is no input for the OS, remove the OS
-        removeBlockByName("OS"); //removes from image
-    } else {
-        var processName = "OS"
-        var processSize = OSMemory;
-        removeBlockByName("OS"); //removes from image
-        removeExistingProcessByName("OS"); //removes from array 
-        calculateRemainingSpace(); //figures out how much room there is now, if the OS is being replaced. 
-        addToMemoryArrayFF(processName, Number(processSize)); //adds the OS to the array
-        calculateRemainingSpace(); //figures out how much room there is now that the OS WAS replaced
-        var row = addNewRowFF(processSize, processName); // adds it to the image
-        addRemainingMemoryBlock(); //adds the blank space to the memory block
-        row.style.backgroundColor = "#ffffcc"; // changes the color of the OS process so it is different from other processes
-    }
-}
-
 // .....................................................UNIVERSAL GRAPHIC ALTERING FUNCTIONS......................................................
 function recreateImage() { // remakes the entire image
     removeAllRows();
@@ -178,11 +169,13 @@ function insertProcessLabel(row, label, size) {
 }
 
 function addRemainingMemoryBlock() { // adds invisible memory block (for formatting)
-    remainingSpaceSize = remainingSpaceSize + "%"; // makes it a percent
-    var rowCount = table.rows.length; // gets the number of rows 
-    var row2 = table.insertRow(rowCount); // inserts a new row at the next available location
-    row2.style.height = remainingSpaceSize;
-    insertProcessLabel(row2, "free", remainingSpaceSize);
+    if (remainingSpaceSize != 0) { //won't add any block if there is no remaining space
+        remainingSpaceSize = remainingSpaceSize + "%"; // makes it a percent
+        var rowCount = table.rows.length; // gets the number of rows 
+        var row2 = table.insertRow(rowCount); // inserts a new row at the next available location
+        row2.style.height = remainingSpaceSize;
+        insertProcessLabel(row2, "free", remainingSpaceSize);
+    }
 }
 
 function calculateRemainingSpace() {
@@ -224,6 +217,7 @@ function addToMemoryArrayFF(processName, processSize) {
         var arr = [processName, processSize, 1];
         if (hole == 0) { // if the hole is at [0], then add the process to the end of the array
             memoryImageAsArray.push(arr);
+            calculateRemainingSpace();
         } else { // otherwise, insert at the element chosen and shift the rest down. 
             var arr = [processName, processSize, 1];
             if (processSize != memoryImageAsArray[hole][1]) {
@@ -260,9 +254,7 @@ function addNewRowFF(processSize, name) {
     row.id = name;
     row.style.height = size; // sets row height
 
-    if (name == "OS") {
-        row.style.backgroundColor = "#ffffcc"; // changes the color of the OS process so it is different from other processes
-    } else if (name == "empty" || name == "free") { //makes the color the same as the background if it is not a process 
+    if (name == "empty" || name == "free") { //makes the color the same as the background if it is not a process 
         row.style.backgroundColor = "#003399";
     } else {
         row.style.backgroundColor = "#ffe6ff"; // changes the color of the process
@@ -335,9 +327,7 @@ function addNewRowWF(processSize, name) {
     row.id = name;
     row.style.height = size; // sets row height
 
-    if (name == "OS") {
-        row.style.backgroundColor = "#ffffcc"; // changes the color of the OS process so it is different from other processes
-    } else if (name == "empty" || name == "free") { //makes the color the same as the background if it is not a process 
+    if (name == "empty" || name == "free") { //makes the color the same as the background if it is not a process 
         row.style.backgroundColor = "#003399";
     } else {
         row.style.backgroundColor = "#ffe6ff"; // changes the color of the process
