@@ -17,6 +17,13 @@ option {
     font-size: 12px;
 }
 
+input[type="number"] {
+    font-family: titleFont;
+    font-size: 20px;
+    font-weight: bold;
+    padding: 5px 0px 5px 0px;
+}
+
 @font-face {
     font-family: titleFont;
     src: url(SIMPLIFICA.ttf);
